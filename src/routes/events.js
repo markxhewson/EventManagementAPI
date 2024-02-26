@@ -31,10 +31,24 @@ router.post('/update/:eventId', async (req, res) => {
     return res.status(404).json({ error: 'Event not found' });
   }
 
-  const updatedEvent = await event.update({ name, date, description, location, views, interested, going }, { where: { id: eventId } });
+  // Create an object containing only the properties that were passed in the request body
+  const updatedEventData = {
+    name: name || eventFound.name,
+    date: date || eventFound.date,
+    description: description || eventFound.description,
+    location: location || eventFound.location,
+    views: views || eventFound.views,
+    interested: interested || eventFound.interested,
+    going: going || eventFound.going
+  };
 
-  return res.status(200).json(updatedEvent);
+  // Update the event with the merged data
+  await event.update(updatedEventData, { where: { id: eventId } });
+  const newEvent = await event.findOne({ where: { id: eventId } });
+
+  return res.status(200).json(newEvent);
 });
+
 
 // get a specific event
 router.get('/:id', async (req, res) => {

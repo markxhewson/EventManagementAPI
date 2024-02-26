@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // get all user registrations for a specific event id
-router.get('/event/:id/registrations', async (req, res) => {
+router.get('/event/:id', async (req, res) => {
   const { id } = req.params;
   const { eventRegistration } = req.app.locals;
 
@@ -12,7 +12,7 @@ router.get('/event/:id/registrations', async (req, res) => {
 });
 
 // get all events a user has signed up for
-router.get('/user/:id/registrations', async (req, res) => {
+router.get('/user/:id', async (req, res) => {
   const { id } = req.params;
   const { eventRegistration } = req.app.locals;
 
@@ -31,3 +31,5 @@ router.post('/register', async (req, res) => {
 
   return res.status(201).json(newRegistration);
 });
+
+module.exports = router;

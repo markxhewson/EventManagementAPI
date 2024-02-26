@@ -36,8 +36,21 @@ router.put('/:id', async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  const updatedUser = await user.update({ username, email, phone, role }, { where: { id } });
+  // Create an object containing only the properties that were passed in the request body
+  const updatedUserData = {
+    username: username || userFound.username,
+    email: email || userFound.email,
+    phone: phone || userFound.phone,
+    role: role || userFound.role
+  };
 
-  return res.status(200).json(updatedUser);
+  // Update the user with the merged data
+  await user.update(updatedUserData, { where: { id } });
+  const newUser = await user.findOne({ where: { id } });
+
+  return res.status(200).json(newUser);
 });
+
+
+module.exports = router;
 

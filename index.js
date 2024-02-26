@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 
 const authMiddleware = require('./src/auth/authMiddlware');
 
@@ -9,6 +10,8 @@ const EventRegistration = require('./src/database/model/eventRegistrations');
 
 const authRouter = require('./src/routes/auth');
 const eventsRouter = require('./src/routes/events');
+const usersRouter = require('./src/routes/users');
+const registrationsRouter = require('./src/routes/eventRegistrations');
 
 const app = express();
 const PORT = 3001;
@@ -26,8 +29,10 @@ app.use((req, res, next) => {
 app.use(authMiddleware);
 
 // endpoint routes
-app.use("/events/auth", authRouter);
+app.use("/auth", authRouter);
 app.use("/events", eventsRouter);
+app.use("/users", usersRouter);
+app.use("/registrations", registrationsRouter)
 
 // final middleware check for unknown endpoints
 app.use((req, res, next) => {
@@ -52,11 +57,13 @@ const createDefaultUsers = async () => {
   const attendee = await User.findOne({ where: { username: 'attendee' } });
 
   if (!organiser) {
-    await User.create({ username: 'organiser', passwordHash: 'organiser', email: 'organiser@gmail.com', phone: '1234567890', role: 'organiser' });
+    const password = await bcrypt.hash('organiser', 10);
+    await User.create({ username: 'organiser', passwordHash: password, email: 'organiser@gmail.com', phone: '1234567890', role: 'organiser' });
   }
 
   if (!attendee) {
-    await User.create({ username: 'attendee', passwordHash: 'attendee', email: 'attendee@gmail.com', phone: '1234567890', role: 'attendee' });
+    const password = await bcrypt.hash('attendee', 10);
+    await User.create({ username: 'attendee', passwordHash: password, email: 'attendee@gmail.com', phone: '1234567890', role: 'attendee' });
   }
 }
 

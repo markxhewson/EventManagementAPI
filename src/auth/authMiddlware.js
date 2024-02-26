@@ -1,7 +1,7 @@
 const { keys } = require("./apiKeys.json");
 
 const apiKeyMiddleware = (req, res, next) => {
-  const apiKey = req.headers['apiKey'];
+  const apiKey = req.headers['api-key'];
 
   if (apiKey && keys.includes(apiKey)) {
     next();
