@@ -11,7 +11,7 @@ const authRouter = require('./src/routes/auth');
 const eventsRouter = require('./src/routes/events');
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
 // dependency injection models
 app.use(express.json())
