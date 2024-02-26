@@ -7,6 +7,7 @@ const Event = require('./src/database/model/events');
 const User = require('./src/database/model/users');
 
 const authRouter = require('./src/routes/auth');
+const eventsRouter = require('./src/routes/events');
 
 const app = express();
 const PORT = 3000;
@@ -24,6 +25,7 @@ app.use(authMiddleware);
 
 // endpoint routes
 app.use("/events/auth", authRouter);
+app.use("/events", eventsRouter);
 
 // final middleware check for unknown endpoints
 app.use((req, res, next) => {
