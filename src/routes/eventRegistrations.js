@@ -20,3 +20,14 @@ router.get('/user/:id/registrations', async (req, res) => {
 
   return res.status(200).json(registrations);
 });
+
+// create a new event registration
+router.post('/register', async (req, res) => {
+  const { userId, eventId } = req.body;
+
+  const { eventRegistration } = req.app.locals;
+
+  const newRegistration = await eventRegistration.create({ userId, eventId, status: "GOING" });
+
+  return res.status(201).json(newRegistration);
+});
