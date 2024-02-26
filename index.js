@@ -38,10 +38,26 @@ const loadServer = async () => {
   await connection.authenticate();
   await Event.sync();
   await User.sync();
+  await EventRegistration.sync();
+
+  await createDefaultUsers();
 
   app.listen(PORT, () => {
     console.log('Events API running on port ' + PORT);
   });
+}
+
+const createDefaultUsers = async () => {
+  const organiser = await User.findOne({ where: { username: 'organiser' } });
+  const attendee = await User.findOne({ where: { username: 'attendee' } });
+
+  if (!organiser) {
+    await User.create({ username: 'organiser', passwordHash: 'organiser', email: 'organiser@gmail.com', phone: '1234567890', role: 'organiser' });
+  }
+
+  if (!attendee) {
+    await User.create({ username: 'attendee', passwordHash: 'attendee', email: 'attendee@gmail.com', phone: '1234567890', role: 'attendee' });
+  }
 }
 
 loadServer();
