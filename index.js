@@ -5,6 +5,7 @@ const authMiddleware = require('./src/auth/authMiddlware');
 const connection = require('./src/database/connection');
 const Event = require('./src/database/model/events');
 const User = require('./src/database/model/users');
+const EventRegistration = require('./src/database/model/eventRegistrations');
 
 const authRouter = require('./src/routes/auth');
 const eventsRouter = require('./src/routes/events');
@@ -17,6 +18,7 @@ app.use(express.json())
 app.use((req, res, next) => {
   req.app.locals.event = Event;
   req.app.locals.user = User;
+  req.app.locals.eventRegistration = EventRegistration;
   next();
 })
 

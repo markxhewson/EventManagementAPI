@@ -20,8 +20,24 @@ const Event = connection.define('Event', {
     type: DataTypes.TEXT,
     allowNull: false
   },
+  location: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
   publisher: {
     type: DataTypes.STRING,
+    allowNull: false
+  },
+  views: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  interested: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  going: {
+    type: DataTypes.INTEGER,
     allowNull: false
   }
 });
