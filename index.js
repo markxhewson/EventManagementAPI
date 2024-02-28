@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const bcrypt = require('bcrypt');
 
 const authMiddleware = require('./src/auth/authMiddlware');
@@ -17,6 +18,7 @@ const app = express();
 const PORT = 3001;
 
 // dependency injection models
+app.use(cors())
 app.use(express.json())
 app.use((req, res, next) => {
   req.app.locals.event = Event;
