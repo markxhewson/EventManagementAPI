@@ -6,14 +6,25 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 router.post('/register', async (req, res) => {
-  const { username, password, email, phone, role } = req.body;
+  const { username, password, email, phone } = req.body;
   const { user } = req.app.locals;
 
+  // Check if the email or phone number already exists in the database
+  const existingUser = await user.findOne({
+      $or: [{ email: email }, { phone: phone }]
+  });
+
+  if (existingUser) {
+      return res.status(400).json({ error: 'An account with this email or phone number already exists' });
+  }
+
+  // If the email and phone number are unique, proceed with user registration
   const passwordHash = await bcrypt.hash(password, 10);
-  const newUser = await user.create({ username, passwordHash, email, phone, emailNotifications: true, smsNotifications: true, twoFactorAuth: false, role });
+  const newUser = await user.create({ username, passwordHash, email, phone, emailNotifications: true, smsNotifications: true, twoFactorAuth: false, role: 'attendee' });
 
   return res.status(201).json(newUser);
 });
+
 
 router.get('/verify', async (req, res) => {
   const token = req.headers.authorization;
