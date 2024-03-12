@@ -19,7 +19,7 @@ const Code = connection.define('Code', {
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false
-    }
+    },
 });
 
 module.exports = Code;

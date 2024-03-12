@@ -6,12 +6,30 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sendSMS = require('../sms/sendSMS');
 
-router.post('/verify-code', async (req, res) => {
-  const { verificationCode } = req.body;
+router.post('/send-code', async (req, res) => {
+  const { userId } = req.body;
   const { user } = req.app.locals;
   const { code } = req.app.locals;
 
-  console.log(verificationCode)
+  const userFound = await user.findOne({ where: { id: userId } });
+
+  if (!userFound) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const generatedCode = Math.floor(100000 + Math.random() * 900000);
+  const record = await code.create({ code: generatedCode, authenticated: false, userId: userFound.id });
+
+  // Send the code to the user's email or phone number
+  sendSMS(userFound.phone, `Your verification code is: ${generatedCode}`);
+
+  return res.status(200).json({ message: 'Verification code sent successfully' });
+});
+
+router.post('/verify-code', async (req, res) => {
+  const { verificationCode, signup } = req.body;
+  const { user } = req.app.locals;
+  const { code } = req.app.locals;
 
   const codeFound = await code.findOne({ where: { code: verificationCode } });
 
@@ -25,10 +43,14 @@ router.post('/verify-code', async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  await user.update({ authenticated: true }, { where: { id: codeFound.userId } });
+  if (signup) {
+    await user.update({ authenticated: true }, { where: { id: codeFound.userId } });
+  }
+
   await code.update({ authenticated: true }, { where: { code: verificationCode } });
 
-  return res.status(200).json({ message: 'Verification successful for ' + userFound.username + " with ID " + userFound.id });
+  delete userFound.dataValues.passwordHash;
+  return res.status(200).json({ message: 'Verification successful for ' + userFound.username + " with ID " + userFound.id, user: userFound });
 });
 
 router.post('/register', async (req, res) => {
