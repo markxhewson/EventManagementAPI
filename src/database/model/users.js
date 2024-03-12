@@ -36,6 +36,10 @@ const User = connection.define('User', {
     type: DataTypes.BOOLEAN,
     allowNull: false
   },
+  authenticated: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false
+  },
   role: {
     type: DataTypes.STRING,
     allowNull: false

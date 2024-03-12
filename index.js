@@ -8,11 +8,14 @@ const connection = require('./src/database/connection');
 const Event = require('./src/database/model/events');
 const User = require('./src/database/model/users');
 const EventRegistration = require('./src/database/model/eventRegistrations');
+const Code = require('./src/database/model/codes');
+const Review = require('./src/database/model/reviews');
 
 const authRouter = require('./src/routes/auth');
 const eventsRouter = require('./src/routes/events');
 const usersRouter = require('./src/routes/users');
 const registrationsRouter = require('./src/routes/eventRegistrations');
+const reviewsRouter = require('./src/routes/reviews');
 
 const app = express();
 const PORT = 3001;
@@ -24,6 +27,8 @@ app.use((req, res, next) => {
   req.app.locals.event = Event;
   req.app.locals.user = User;
   req.app.locals.eventRegistration = EventRegistration;
+  req.app.locals.code = Code;
+  req.app.locals.review = Review;
   next();
 })
 
@@ -35,6 +40,7 @@ app.use("/auth", authRouter);
 app.use("/events", eventsRouter);
 app.use("/users", usersRouter);
 app.use("/registrations", registrationsRouter)
+app.use("/reviews", reviewsRouter)
 
 // final middleware check for unknown endpoints
 app.use((req, res, next) => {
@@ -46,6 +52,8 @@ const loadServer = async () => {
   await Event.sync();
   await User.sync();
   await EventRegistration.sync();
+  await Code.sync();
+  await Review.sync();
 
   await createDefaultUsers();
 
@@ -60,12 +68,12 @@ const createDefaultUsers = async () => {
 
   if (!organiser) {
     const password = await bcrypt.hash('organiser', 10);
-    await User.create({ username: 'organiser', passwordHash: password, email: 'organiser@gmail.com', phone: '1234567890', emailNotifications: true, smsNotifications: true, twoFactorAuth: false, role: 'organiser' });
+    await User.create({ username: 'organiser', passwordHash: password, email: 'organiser@gmail.com', phone: '1234567890', emailNotifications: true, smsNotifications: true, twoFactorAuth: false, authenticated: false, role: 'organiser' });
   }
 
   if (!attendee) {
     const password = await bcrypt.hash('attendee', 10);
-    await User.create({ username: 'attendee', passwordHash: password, email: 'attendee@gmail.com', phone: '1234567890', emailNotifications: true, smsNotifications: true, twoFactorAuth: false, role: 'attendee' });
+    await User.create({ username: 'attendee', passwordHash: password, email: 'attendee@gmail.com', phone: '1234567890', emailNotifications: true, smsNotifications: true, twoFactorAuth: false, authenticated: false, role: 'attendee' });
   }
 }
 

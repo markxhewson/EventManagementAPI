@@ -4,27 +4,67 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const sendSMS = require('../sms/sendSMS');
+
+router.post('/verify-code', async (req, res) => {
+  const { verificationCode } = req.body;
+  const { user } = req.app.locals;
+  const { code } = req.app.locals;
+
+  console.log(verificationCode)
+
+  const codeFound = await code.findOne({ where: { code: verificationCode } });
+
+  if (!codeFound) {
+    return res.status(401).json({ error: 'Invalid verification code' });
+  }
+
+  const userFound = await user.findOne({ where: { id: codeFound.userId } });
+
+  if (!userFound) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  await user.update({ authenticated: true }, { where: { id: codeFound.userId } });
+  await code.update({ authenticated: true }, { where: { code: verificationCode } });
+
+  return res.status(200).json({ message: 'Verification successful for ' + userFound.username + " with ID " + userFound.id });
+});
 
 router.post('/register', async (req, res) => {
   const { username, password, email, phone } = req.body;
   const { user } = req.app.locals;
+  const { code } = req.app.locals;
 
-  // Check if the email or phone number already exists in the database
-  const existingUser = await user.findOne({
-      $or: [{ email: email }, { phone: phone }]
-  });
+  // Convert email and phone to lowercase
+  const lowercaseEmail = email.toLowerCase();
+  const lowercasePhone = phone.toLowerCase();
 
-  if (existingUser) {
-      return res.status(400).json({ error: 'An account with this email or phone number already exists' });
+  // Check if the email already exists in the database
+  const existingEmail = await user.findOne({ where: { email: lowercaseEmail } });
+  if (existingEmail) {
+    return res.status(400).json({ error: 'An account with this email already exists' });
   }
 
-  // If the email and phone number are unique, proceed with user registration
+  // Check if the phone number already exists in the database
+  const existingPhone = await user.findOne({ where: { phone: lowercasePhone } });
+  if (existingPhone) {
+    return res.status(400).json({ error: 'An account with this phone number already exists' });
+  }
+
+  // If neither the email nor the phone number exists, proceed with user registration
   const passwordHash = await bcrypt.hash(password, 10);
-  const newUser = await user.create({ username, passwordHash, email, phone, emailNotifications: true, smsNotifications: true, twoFactorAuth: false, role: 'attendee' });
+  const newUser = await user.create({ username, passwordHash, email, phone, emailNotifications: true, smsNotifications: true, twoFactorAuth: false, authenticated: false, role: 'attendee' });
+
+  // generate a code and send to phone for auth
+  const generatedCode = Math.floor(100000 + Math.random() * 900000);
+  const record = await code.create({ code: generatedCode, authenticated: false, userId: newUser.id });
+
+  // Send the code to the user's email or phone number
+  sendSMS(phone, `Your verification code is: ${generatedCode}`);
 
   return res.status(201).json(newUser);
 });
-
 
 router.get('/verify', async (req, res) => {
   const token = req.headers.authorization;
