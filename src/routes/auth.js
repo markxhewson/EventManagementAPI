@@ -10,7 +10,7 @@ router.post('/register', async (req, res) => {
   const { user } = req.app.locals;
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const newUser = await user.create({ username, passwordHash, email, phone, role });
+  const newUser = await user.create({ username, passwordHash, email, phone, emailNotifications: true, smsNotifications: true, twoFactorAuth: false, role });
 
   return res.status(201).json(newUser);
 });

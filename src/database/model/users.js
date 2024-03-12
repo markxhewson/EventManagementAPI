@@ -24,6 +24,18 @@ const User = connection.define('User', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  emailNotifications: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false
+  },
+  smsNotifications: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false
+  },
+  twoFactorAuth: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false
+  },
   role: {
     type: DataTypes.STRING,
     allowNull: false
