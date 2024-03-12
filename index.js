@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const path = require('path');
 
 const authMiddleware = require('./src/auth/authMiddlware');
+const apiRouter = require('./src/api');
 
 const connection = require('./src/database/connection');
 const Event = require('./src/database/model/events');
@@ -11,18 +13,15 @@ const EventRegistration = require('./src/database/model/eventRegistrations');
 const Code = require('./src/database/model/codes');
 const Review = require('./src/database/model/reviews');
 
-const authRouter = require('./src/routes/auth');
-const eventsRouter = require('./src/routes/events');
-const usersRouter = require('./src/routes/users');
-const registrationsRouter = require('./src/routes/eventRegistrations');
-const reviewsRouter = require('./src/routes/reviews');
-
 const app = express();
 const PORT = 3001;
 
-// dependency injection models
+/**
+ * Middlewares
+ */
 app.use(cors())
 app.use(express.json())
+// dependency injection models
 app.use((req, res, next) => {
   req.app.locals.event = Event;
   req.app.locals.user = User;
@@ -32,19 +31,15 @@ app.use((req, res, next) => {
   next();
 })
 
-// auth middleware (api keys)
-app.use(authMiddleware);
+// Serve static files for the frontend
+app.use(express.static('dist'));
 
-// endpoint routes
-app.use("/auth", authRouter);
-app.use("/events", eventsRouter);
-app.use("/users", usersRouter);
-app.use("/registrations", registrationsRouter)
-app.use("/reviews", reviewsRouter)
+// API routes are under `/api` (protected by the authMiddleware)
+app.use('/api', authMiddleware, apiRouter);
 
-// final middleware check for unknown endpoints
-app.use((req, res, next) => {
-  res.status(404).json({ error: 'Endpoint not found' });
+// Serve the frontend for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 const loadServer = async () => {
