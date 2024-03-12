@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt');
 
 // get all users
 router.get('/', async (req, res) => {
@@ -27,7 +28,7 @@ router.get('/:id', async (req, res) => {
 // update a user
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { username, email, phone, role } = req.body;
+  const { username, password, email, phone, role } = req.body;
   const { user } = req.app.locals;
 
   const userFound = await user.findOne({ where: { id } });
@@ -39,6 +40,7 @@ router.put('/:id', async (req, res) => {
   // Create an object containing only the properties that were passed in the request body
   const updatedUserData = {
     username: username || userFound.username,
+    passwordHash: password ? await bcrypt.hash(password, 10) : userFound.password,
     email: email || userFound.email,
     phone: phone || userFound.phone,
     role: role || userFound.role
