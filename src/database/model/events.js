@@ -12,33 +12,39 @@ const Event = connection.define('Event', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  date: {
-    type: DataTypes.DATE,
-    allowNull: false
-  },
   description: {
     type: DataTypes.TEXT,
+    allowNull: false
+  },
+  image_url: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  start_date: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  end_date: {
+    type: DataTypes.INTEGER,
     allowNull: false
   },
   location: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  publisher: {
-    type: DataTypes.STRING,
+  createdBy: {
+    type: DataTypes.INTEGER,
     allowNull: false
+  },
+  max_registrations: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null
   },
   views: {
     type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  interested: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  going: {
-    type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    defaultValue: 0
   }
 });
 

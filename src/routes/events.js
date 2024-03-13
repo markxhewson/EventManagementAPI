@@ -3,10 +3,10 @@ const router = express.Router();
 
 // create an event
 router.post('/', async (req, res) => {
-  const { name, date, description, location, publisher } = req.body;
+  const { name, description, image_url, start_date, end_date, location } = req.body;
   const { event } = req.app.locals;
 
-  const newEvent = await event.create({ name, date, description, location, publisher, views: 0, interested: 0, going: 0 });
+  const newEvent = await event.create({ name, description, image_url, start_date, end_date, location, createdBy: 1 });
 
   return res.status(201).json(newEvent);
 });
@@ -20,9 +20,9 @@ router.get('/', async (req, res) => {
   return res.status(200).json(events);
 });
 
-router.post('/update/:eventId', async (req, res) => {
+router.put('/:eventId', async (req, res) => {
   const { eventId } = req.params;
-  const { name, date, description, location, views, interested, going } = req.body;
+  const { name, description, image_url, start_date, end_date, location } = req.body;
   const { event } = req.app.locals;
 
   const eventFound = await event.findOne({ where: { id: eventId } });
@@ -31,22 +31,17 @@ router.post('/update/:eventId', async (req, res) => {
     return res.status(404).json({ error: 'Event not found' });
   }
 
-  // Create an object containing only the properties that were passed in the request body
-  const updatedEventData = {
-    name: name || eventFound.name,
-    date: date || eventFound.date,
-    description: description || eventFound.description,
-    location: location || eventFound.location,
-    views: views || eventFound.views,
-    interested: interested || eventFound.interested,
-    going: going || eventFound.going
-  };
+  // Update specified fields
+  eventFound.name = name || eventFound.name,
+  eventFound.description = description || eventFound.description,
+  eventFound.image_url = image_url || eventFound.image_url,
+  eventFound.start_date = start_date || eventFound.start_date,
+  eventFound.end_date = end_date || eventFound.end_date,
+  eventFound.location = location || eventFound.location
 
   // Update the event with the merged data
-  await event.update(updatedEventData, { where: { id: eventId } });
-  const newEvent = await event.findOne({ where: { id: eventId } });
-
-  return res.status(200).json(newEvent);
+  await eventFound.save();
+  return res.status(200).json(eventFound);
 });
 
 
@@ -76,7 +71,6 @@ router.delete('/:id', async (req, res) => {
   }
 
   await event.destroy({ where: { id } });
-
   return res.status(204).json();
 });
 
