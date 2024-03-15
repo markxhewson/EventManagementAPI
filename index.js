@@ -12,6 +12,7 @@ const User = require('./src/database/model/users');
 const EventRegistration = require('./src/database/model/eventRegistrations');
 const Code = require('./src/database/model/codes');
 const Review = require('./src/database/model/reviews');
+const Application = require('./src/database/model/applications');
 
 const app = express();
 const PORT = 3001;
@@ -28,6 +29,7 @@ app.use((req, res, next) => {
   req.app.locals.eventRegistration = EventRegistration;
   req.app.locals.code = Code;
   req.app.locals.review = Review;
+  req.app.locals.application = Application;
   next();
 })
 
@@ -49,6 +51,7 @@ const loadServer = async () => {
   await EventRegistration.sync();
   await Code.sync();
   await Review.sync();
+  await Application.sync();
 
   await createDefaultUsers();
 

@@ -5,6 +5,7 @@ const eventsRouter = require('./routes/events');
 const usersRouter = require('./routes/users');
 const registrationsRouter = require('./routes/eventRegistrations');
 const reviewsRouter = require('./routes/reviews');
+const applicationsRouter = require('./routes/applications');
 
 /**
  * All the API routes are defined here
@@ -17,6 +18,7 @@ apiRouter.use("/events", eventsRouter);
 apiRouter.use("/users", usersRouter);
 apiRouter.use("/registrations", registrationsRouter);
 apiRouter.use("/reviews", reviewsRouter);
+apiRouter.use("/applications", applicationsRouter);
 
 // final middleware check for unknown endpoints
 apiRouter.use((req, res, next) => {
