@@ -6,7 +6,7 @@ router.get('/', async (req, res) => {
 
     try {
         const applications = await application.findAll({
-            order: [['createdAt', 'DESC']] // Ordering by createdAt in descending order
+            order: [['createdAt', 'DESC']], where: { approved: false }
         });
 
         for (const application of applications) {
