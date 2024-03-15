@@ -40,6 +40,10 @@ const User = connection.define('User', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  interests: {
+    type: DataTypes.JSON,
+    allowNull: false
+  },
   authenticated: {
     type: DataTypes.BOOLEAN,
     allowNull: false
