@@ -4,7 +4,8 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const sendSMS = require('../sms/sendSMS');
+const sendSMS = require('../verification/sendSMS');
+const sendEmail = require('../verification/sendEmail');
 
 router.post('/send-code', async (req, res) => {
   const { userId } = req.body;
@@ -21,7 +22,11 @@ router.post('/send-code', async (req, res) => {
   const record = await code.create({ code: generatedCode, authenticated: false, userId: userFound.id });
 
   // Send the code to the user's email or phone number
-  sendSMS(userFound.phone, `Your verification code is: ${generatedCode}`);
+  if (userFound.preferredAuth.toLowerCase() == 'sms') {
+    sendSMS(userFound.phone, `Your verification code is: ${generatedCode}`);
+  } else {
+    sendEmail(userFound.email, `Your verification code is: ${generatedCode}`)
+  }
 
   return res.status(200).json({ message: 'Verification code sent successfully' });
 });
@@ -54,7 +59,7 @@ router.post('/verify-code', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-  const { username, password, email, phone } = req.body;
+  const { username, password, email, phone, type } = req.body;
   const { user } = req.app.locals;
   const { code } = req.app.locals;
 
@@ -76,14 +81,18 @@ router.post('/register', async (req, res) => {
 
   // If neither the email nor the phone number exists, proceed with user registration
   const passwordHash = await bcrypt.hash(password, 10);
-  const newUser = await user.create({ username, passwordHash, email, phone, emailNotifications: true, smsNotifications: true, twoFactorAuth: false, authenticated: false, role: 'attendee' });
+  const newUser = await user.create({ username, passwordHash, email, phone, emailNotifications: true, smsNotifications: true, twoFactorAuth: false, preferredAuth: type.toLowerCase(), authenticated: false, role: 'attendee' });
 
   // generate a code and send to phone for auth
   const generatedCode = Math.floor(100000 + Math.random() * 900000);
   const record = await code.create({ code: generatedCode, authenticated: false, userId: newUser.id });
 
   // Send the code to the user's email or phone number
-  sendSMS(phone, `Your verification code is: ${generatedCode}`);
+  if (type.toLowerCase() == 'sms') {
+    sendSMS(phone, `Your verification code is: ${generatedCode}`);
+  } else {
+    sendEmail(email, `Your verification code is: ${generatedCode}`)
+  }
 
   return res.status(201).json(newUser);
 });

@@ -63,12 +63,12 @@ const createDefaultUsers = async () => {
 
   if (!organiser) {
     const password = await bcrypt.hash('organiser', 10);
-    await User.create({ username: 'organiser', passwordHash: password, email: 'organiser@gmail.com', phone: '1234567890', emailNotifications: true, smsNotifications: true, twoFactorAuth: false, authenticated: false, role: 'organiser' });
+    await User.create({ username: 'organiser', passwordHash: password, email: 'organiser@gmail.com', phone: '1234567890', emailNotifications: true, smsNotifications: true, twoFactorAuth: false, preferredAuth: 'sms', authenticated: false, role: 'organiser' });
   }
 
   if (!attendee) {
     const password = await bcrypt.hash('attendee', 10);
-    await User.create({ username: 'attendee', passwordHash: password, email: 'attendee@gmail.com', phone: '1234567890', emailNotifications: true, smsNotifications: true, twoFactorAuth: false, authenticated: false, role: 'attendee' });
+    await User.create({ username: 'attendee', passwordHash: password, email: 'attendee@gmail.com', phone: '1234567890', emailNotifications: true, smsNotifications: true, twoFactorAuth: false, preferredAuth: 'sms', authenticated: false, role: 'attendee' });
   }
 }
 

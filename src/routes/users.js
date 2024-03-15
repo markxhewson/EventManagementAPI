@@ -28,7 +28,7 @@ router.get('/:id', async (req, res) => {
 // update a user
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { username, password, email, phone, emailNotifications, smsNotifications, twoFactorAuth, role } = req.body;
+  const { username, password, email, phone, emailNotifications, smsNotifications, twoFactorAuth, role, preferredAuth } = req.body;
   const { user } = req.app.locals;
 
   const userFound = await user.findOne({ where: { id } });
@@ -46,7 +46,8 @@ router.put('/:id', async (req, res) => {
     emailNotifications: emailNotifications !== undefined ? !!parseInt(emailNotifications) : userFound.emailNotifications,
     smsNotifications: smsNotifications !== undefined ? !!parseInt(smsNotifications) : userFound.smsNotifications,
     twoFactorAuth: twoFactorAuth !== undefined ? !!parseInt(twoFactorAuth) : userFound.twoFactorAuth,
-    role: role || userFound.role
+    role: role || userFound.role,
+    preferredAuth: preferredAuth || userFound.preferredAuth
 };
 
 
