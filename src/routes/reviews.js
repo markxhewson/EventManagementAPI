@@ -14,7 +14,13 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
     const { review } = req.app.locals;
 
-    const reviews = await review.findAll();
+    const reviews = await review.findAll({ order: [['createdAt', 'DESC']] });
+
+    for (const review of reviews) {
+        const { user } = req.app.locals;
+        const userFound = await user.findOne({ where: { id: review.userId } });
+        review.dataValues.user = userFound;
+    }
 
     return res.status(200).json({ data: { reviews } });
 });
