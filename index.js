@@ -22,6 +22,8 @@ const PORT = 3001;
  */
 app.use(cors())
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
+
 // dependency injection models
 app.use((req, res, next) => {
   req.app.locals.event = Event;
@@ -35,6 +37,8 @@ app.use((req, res, next) => {
 
 // Serve static files for the frontend
 app.use(express.static('dist'));
+// Serve uploaded images from the /uploads directory
+app.use('/uploads', express.static('uploads'));
 
 // API routes are under `/api` (protected by the authMiddleware)
 app.use('/api', authMiddleware, apiRouter);

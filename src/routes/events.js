@@ -1,14 +1,61 @@
+const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+
+/**
+ * Image upload middleware
+ */
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '..', '..', 'uploads'))
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = crypto.randomUUID();
+    file.mimetype
+    cb(null, file.fieldname + '-' + uniqueSuffix + '.' + file.mimetype.split('/')[1]);
+  }
+});
+const imageUpload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 1024 * 1024 * 5 // 5MB,
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg' || file.mimetype === 'image/png') {
+      cb(null, true)
+    } else {
+      cb(new Error("Invalid file type. Only images are allowed."))
+    }
+  }
+});
 
 // create an event
 router.post('/', async (req, res) => {
-  const { name, description, image_url, start_date, end_date, location } = req.body;
-  const { event } = req.app.locals;
+  imageUpload.single('image')(req, res, async (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ error: 'Image upload error' });
+    }
+    else if (err) {
+      return res.status(400).json({ error: 'Image upload error' });
+    }
 
-  const newEvent = await event.create({ name, description, image_url, start_date, end_date, location, createdBy: 1 });
+    const { name, description, start_date, end_date, location } = req.body;
+    const { event } = req.app.locals;
 
-  return res.status(201).json(newEvent);
+    const newEvent = await event.create({
+      name,
+      description,
+      start_date,
+      end_date,
+      location,
+      createdBy: 1,
+      image_url: req.file ? `/uploads/${req.file.filename}` : null,
+    });
+
+    return res.status(201).json(newEvent);
+  });
 });
 
 // get all events
