@@ -58,6 +58,29 @@ router.put('/:id', async (req, res) => {
   return res.status(200).json(newUser);
 });
 
+// get events a user has signed up for, there is no foreign keys so do it manually
+router.get('/:id/events', async (req, res) => {
+  const { id } = req.params;
+  const { user, event, eventRegistration } = req.app.locals;
+
+  const userFound = await user.findOne({ where: { id } });
+
+  if (!userFound) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const events = [];
+
+  const registrations = await eventRegistration.findAll({ where: { userId: id } });
+
+  for (const registration of registrations) {
+    const eventFound = await event.findOne({ where: { id: registration.eventId } });
+    events.push(eventFound);
+  }
+
+  return res.status(200).json(events);
+});
+
 
 module.exports = router;
 
