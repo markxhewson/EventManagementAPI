@@ -15,12 +15,6 @@ const EventRegistration = connection.define('EventRegistration', {
   userId: {
     type: DataTypes.INTEGER,
     allowNull: false
-  },
-  status: {
-    /* GOING, WAITLISTED */
-    type: DataTypes.STRING,
-    allowNull: false,
-    defaultValue: "GOING"
   }
 });
 

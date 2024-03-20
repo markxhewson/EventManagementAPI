@@ -4,58 +4,60 @@ const PDFDocument = require("pdfkit-table");
 const router = express.Router();
 
 // generate pdf for event regsitrations
-router.get('/event/:id/pdf', async(req, res) => {
+router.post('/event/:id/pdf', async(req, res) => {
   const { id } = req.params;
-  const { eventRegistration, user } = req.app.locals;
+  const { event, eventRegistration, user } = req.app.locals;
 
-  const registrations = await eventRegistration.findAll({ where: { eventId: id } });
+  const eventData = await event.findOne({ where: { id } });
+  const regData = await eventRegistration.findAll({ where: { eventId: id } });
   const usersData = await user.findAll({ where:
     {
       id: {
-        [Op.in]: registrations.map(registration => registration.userId)
+        [Op.in]: regData.map(registration => registration.userId)
       }
     }
   });
+
+  if (!eventData) {
+    return res.status(404).json({ error: 'Event not found' });
+  }
   
   // Prepare the data for the PDF tables
-  let regs = [];
+  const { name, max_registrations } = eventData;
+  const data = regData.map((reg, idx) => {
+    const user = usersData.find(u => u.id === reg.userId);
+    return [
+      idx + 1,
+      user.username,
+      user.email,
+      user.phone
+    ]
+  });
+
+  // Slice the registrations depending on the max_registrations
+  let registrations = data;
   let waitingList = [];
 
-  for (const reg of registrations) {
-    const user = usersData.find(u => u.id === reg.userId);
-    if (reg.status === 'GOING') {
-      regs.push([
-        user.username,
-        user.email,
-        user.phone
-      ]);
-    }
-    else {
-      waitingList.push([
-        user.username,
-        user.email,
-        user.phone
-      ]);
-    }
+  if (max_registrations && data.length > max_registrations) {
+    registrations = data.slice(0, max_registrations);
+    waitingList = data.slice(max_registrations);
   }
-  // Table arrays
-  regs = regs.map((r, idx) => [idx + 1, ...r]);
-  waitingList = waitingList.map((r, idx) => [idx + 1, ...r]);
 
   // Create a new PDF document
   const doc = new PDFDocument();
 
   // Set response headers for PDF
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'attachment; filename=event_registrations.pdf');
+  res.setHeader('Content-Disposition', `inline;filename=${name}_registrations.pdf`);
 
   // Pipe the PDF document to the response stream
   doc.pipe(res);
 
   const table1 = { 
-    title: 'Event Registrations',
+    title: name,
+    subtitle: 'Event Registrations',
     headers: ['#', 'Username', 'Email', 'Phone'],
-    rows: regs
+    rows: registrations
   };
   await doc.table(table1, { columnsSize: [ 50, 100, 200, 100  ] });
 
@@ -63,7 +65,7 @@ router.get('/event/:id/pdf', async(req, res) => {
     doc.addPage();
 
     const table2 = {
-      title: 'Waiting List',
+      subtitle: 'Waiting List',
       headers: ['#', 'Username', 'Email', 'Phone'],
       rows: waitingList
     };
@@ -117,8 +119,7 @@ router.post('/register', async (req, res) => {
 
   const { eventRegistration } = req.app.locals;
 
-  const newRegistration = await eventRegistration.create({ userId, eventId, status: "GOING" });
-
+  const newRegistration = await eventRegistration.create({ userId, eventId });
   return res.status(201).json(newRegistration);
 });
 
