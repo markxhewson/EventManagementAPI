@@ -32,10 +32,6 @@ const Event = connection.define('Event', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  createdBy: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
   max_registrations: {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -45,6 +41,12 @@ const Event = connection.define('Event', {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 0
+  },
+  status: {
+    /* ('paused', 'cancelled', 'active') */
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'active'
   }
 });
 

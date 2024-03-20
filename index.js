@@ -13,6 +13,8 @@ const EventRegistration = require('./src/database/model/eventRegistrations');
 const Code = require('./src/database/model/codes');
 const Review = require('./src/database/model/reviews');
 const Application = require('./src/database/model/applications');
+const Interests = require('./src/database/model/interests');
+const EventInterests = require('./src/database/model/eventInterests');
 
 const app = express();
 const PORT = 3001;
@@ -32,6 +34,8 @@ app.use((req, res, next) => {
   req.app.locals.code = Code;
   req.app.locals.review = Review;
   req.app.locals.application = Application;
+  req.app.locals.interests = Interests;
+  req.app.locals.eventInterests = EventInterests;
   next();
 })
 
@@ -56,8 +60,11 @@ const loadServer = async () => {
   await Code.sync();
   await Review.sync();
   await Application.sync();
+  await Interests.sync();
+  await EventInterests.sync();
 
   await createDefaultUsers();
+  await createDefaultInterests();
 
   app.listen(PORT, () => {
     console.log('Events API running on port ' + PORT);
@@ -77,6 +84,24 @@ const createDefaultUsers = async () => {
     const password = await bcrypt.hash('attendee', 10);
     await User.create({ username: 'attendee', passwordHash: password, email: 'attendee@gmail.com', phone: '1234567890', emailNotifications: true, smsNotifications: true, twoFactorAuth: false, interests: [], preferredAuth: 'sms', authenticated: false, role: 'attendee' });
   }
+}
+
+const createDefaultInterests = async () => {
+  const defaults = [
+    { id: 1, name: "Medical Research" },
+    { id: 2, name: "Cervical Scanning" },
+    { id: 3, name: "Breast Cancer" },
+    { id: 4, name: "Awareness" },
+    { id: 5, name: "Fundraising" },
+    { id: 6, name: "Survivorship & Long-term Effects" }
+  ];
+
+  await Promise.all(defaults.map(async (interest) => {
+    const existingInterest = await Interests.findOne({ where: { name: interest.name } });
+    if (!existingInterest) {
+      await Interests.create(interest);
+    }
+  }));
 }
 
 loadServer();

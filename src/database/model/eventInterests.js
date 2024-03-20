@@ -1,7 +1,7 @@
 const connection = require('../connection');
 const { DataTypes } = require('sequelize');
 
-const EventRegistration = connection.define('EventRegistration', {
+const EventInterests = connection.define('EventInterests', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -10,18 +10,12 @@ const EventRegistration = connection.define('EventRegistration', {
   },
   eventId: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
   },
-  userId: {
+  interestId: {
     type: DataTypes.INTEGER,
     allowNull: false
-  },
-  status: {
-    /* GOING, WAITLISTED */
-    type: DataTypes.STRING,
-    allowNull: false,
-    defaultValue: "GOING"
   }
 });
 
-module.exports = EventRegistration;
+module.exports = EventInterests;
