@@ -47,6 +47,11 @@ const Event = connection.define('Event', {
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'active'
+  },
+  reminder_sent: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
   }
 });
 

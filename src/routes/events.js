@@ -71,8 +71,75 @@ router.get('/', async (req, res) => {
   return res.status(200).json(events);
 });
 
+router.post('/:eventId/reminders', async(req, res) => {
+  const { eventId } = req.params;
+  const { event, eventRegistration, user } = req.app.locals;
+  const { message } = req.body;
+
+  const eventFound = await event.findOne({ where: { id: eventId } });
+  if (!eventFound) {
+    return res.status(404).json({ error: 'Event not found' });
+  }
+  if (eventFound.reminder_sent) {
+    return res.status(400).json({ error: 'Reminders already sent' });
+  }
+
+  // Update reminder_sent status
+  eventFound.reminder_sent = true;
+  await eventFound.save();
+
+  // Send alert email or SMS to all registered users before `max_registrations` is reached
+  let regData = await eventRegistration.findAll({ where: { eventId } });
+  if (eventFound.max_registrations && regData.length > eventFound.max_registrations) {
+    regData = regData.slice(0, eventFound.max_registrations);
+  }
+
+  const usersData = await user.findAll({ where: {
+    id: {
+      [Op.in]: regData.map(registration => registration.userId)
+    }
+  }});
+
+  // send off all alerts simultaneously and collect errors silently
+  const results = await Promise.allSettled(
+    usersData.map(async (user) => {
+      try {
+        if (user.emailNotifications) {
+          const subject = 'Event Reminder!';
+          return await sendEmail(subject, user.email, message);
+        }
+        else if (user.smsNotifications) {
+          return await sendSMS(user.phone, message);
+        }
+      } catch(err) {
+        throw {
+          username: user.username,
+          code: 'SEND_FAILED',
+          message: err.message
+        }
+      }
+      throw {
+        username: user.username,
+        code: 'CONTACT_PREFS_DISABLED'
+      }
+    })
+  );
+
+  // collect errors and return them
+  const sendErrors = results
+    .filter(result => result.status === 'rejected')
+    .map(result => result.reason);
+
+  if (sendErrors.length !== 0) {
+    console.error('Failed to send reminders: ', sendErrors);
+  }
+  return res.status(200).json({
+    sendErrors
+  });
+});
+
 // update event status
-router.put('/status/:eventId', async (req, res) => {
+router.put('/:eventId/status', async (req, res) => {
   const { eventId } = req.params;
   const { status, sendAlerts } = req.body;
   const { event, eventRegistration, user } = req.app.locals;
