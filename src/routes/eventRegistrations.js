@@ -115,9 +115,17 @@ router.get('/user/:id', async (req, res) => {
 
 // create a new event registration
 router.post('/register', async (req, res) => {
-  const { userId, eventId } = req.body;
+  const { userId, eventId, event } = req.body;
 
   const { eventRegistration } = req.app.locals;
+
+  const eventFound = await event.findOne({ where: { id: eventId } });
+  if (eventFound.status === 'paused') {
+    return res.status(400).json({ error: 'Event registration is paused' });
+  }
+  else if (eventFound.status === 'cancelled') {
+    return res.status(400).json({ error: 'Event is cancelled' });
+  }
 
   const newRegistration = await eventRegistration.create({ userId, eventId });
   return res.status(201).json(newRegistration);

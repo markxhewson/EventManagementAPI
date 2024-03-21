@@ -3,6 +3,9 @@ const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const sendEmail = require('../verification/sendEmail');
+const sendSMS = require('../verification/sendSMS');
+const { Op } = require('sequelize');
 
 /**
  * Image upload middleware
@@ -72,20 +75,71 @@ router.get('/', async (req, res) => {
 router.put('/status/:eventId', async (req, res) => {
   const { eventId } = req.params;
   const { status, sendAlerts } = req.body;
-  const { event } = req.app.locals;
+  const { event, eventRegistration, user } = req.app.locals;
 
   const eventFound = await event.findOne({ where: { id: eventId } });
   if (!eventFound) {
     return res.status(404).json({ error: 'Event not found' });
   }
 
-  if (sendAlerts && status === 'cancelled') {
-    // TODO: Send alerts
-  }
-
+  // Update status
   eventFound.status = status;
   await eventFound.save();
-  return res.status(200).json(eventFound);
+
+  if (!sendAlerts || status !== 'cancelled') {
+    // No alerts to send
+    return res.status(200).json({});
+  }
+
+  // Send alert email or SMS to all registered users
+  const regData = await eventRegistration.findAll({ where: { eventId } });
+  const usersData = await user.findAll({ where: {
+    id: {
+      [Op.in]: regData.map(registration => registration.userId)
+    }
+  }});
+
+  // send off all alerts simultaneously and collect errors silently
+  const results = await Promise.allSettled(
+    usersData.map(async (user) => {
+      // respect contact preferences
+      const date = new Date(eventFound.start_date).toLocaleDateString('en-GB');
+      const content = `The event '${eventFound.name}' that you've registered for on ${date} has been cancelled. We apologize for any inconvenience.`;
+
+      try {
+        if (user.emailNotifications) {
+          const subject = 'Event Cancelled!';
+          return await sendEmail(subject, user.email, content);
+        }
+        else if (user.smsNotifications) {
+          const recipient = user.phone;
+          return await sendSMS(recipient, content);
+        }
+      } catch(err) {
+        throw {
+          username: user.username,
+          code: 'SEND_FAILED',
+          message: err.message
+        }
+      }
+      throw {
+        username: user.username,
+        code: 'CONTACT_PREFS_DISABLED'
+      }
+    })
+  );
+
+  // collect errors and return them
+  const alertErrors = results
+    .filter(result => result.status === 'rejected')
+    .map(result => result.reason);
+
+  if (alertErrors.length !== 0) {
+    console.error('Failed to send cancellation alerts: ', alertErrors);
+  }
+  return res.status(200).json({
+    alertErrors
+  });
 });
 
 // update event details

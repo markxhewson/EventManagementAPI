@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const sendEmail = async (recipient, content) => {
+const sendEmail = (subject, recipient, content) => {
     const transporter = nodemailer.createTransport({
         host: 'smtp-relay.brevo.com',
         port: 587,
@@ -15,17 +15,21 @@ const sendEmail = async (recipient, content) => {
     const mailOptions = {
         from: '"Event Bloom" <eventbloomauth@gmail.com>',
         to: recipient,
-        subject: 'Your Verification Code',
+        subject: subject,
         text: content,
         html: '<strong>' + content + '</strong>'
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.error('Error:', error);
-        } else {
-            console.log('Email sent:', info.response);
-        }
+    return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Email error:', err);
+                reject(error);
+            } else {
+                console.log('Email sent:', info.response);
+                resolve(info);
+            }
+        });
     });
 };
 

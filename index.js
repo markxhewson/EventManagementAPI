@@ -95,9 +95,10 @@ const createDefaultInterests = async () => {
     { id: 5, name: "Fundraising" },
     { id: 6, name: "Survivorship & Long-term Effects" }
   ];
+  const interests = await Interests.findAll();
 
   await Promise.all(defaults.map(async (interest) => {
-    const existingInterest = await Interests.findOne({ where: { name: interest.name } });
+    const existingInterest = interests.find(i => i.name === interest.name);
     if (!existingInterest) {
       await Interests.create(interest);
     }

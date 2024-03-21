@@ -25,7 +25,7 @@ router.post('/send-code', async (req, res) => {
   if (userFound.preferredAuth.toLowerCase() == 'sms') {
     sendSMS(userFound.phone, `Your verification code is: ${generatedCode}`);
   } else {
-    sendEmail(userFound.email, `Your verification code is: ${generatedCode}`)
+    sendEmail('Your Verification Code', userFound.email, `Your verification code is: ${generatedCode}`)
   }
 
   return res.status(200).json({ message: 'Verification code sent successfully' });
@@ -91,7 +91,7 @@ router.post('/register', async (req, res) => {
   if (type.toLowerCase() == 'sms') {
     sendSMS(phone, `Your verification code is: ${generatedCode}`);
   } else {
-    sendEmail(email, `Your verification code is: ${generatedCode}`)
+    sendEmail('Your Verification Code', email, `Your verification code is: ${generatedCode}`)
   }
 
   return res.status(201).json(newUser);
