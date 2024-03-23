@@ -115,9 +115,9 @@ router.get('/user/:id', async (req, res) => {
 
 // create a new event registration
 router.post('/register', async (req, res) => {
-  const { userId, eventId, event } = req.body;
+  const { userId, eventId } = req.body;
 
-  const { eventRegistration } = req.app.locals;
+  const { event, eventRegistration } = req.app.locals;
 
   const eventFound = await event.findOne({ where: { id: eventId } });
   if (eventFound.status === 'paused') {
@@ -127,8 +127,30 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Event is cancelled' });
   }
 
+  // check if already registered for event
+  const existingRegistration = await eventRegistration.findOne({ where: { userId, eventId } });
+
+  if (existingRegistration) {
+    return res.status(400).json({ error: 'Already registered for event' });
+  }
+
   const newRegistration = await eventRegistration.create({ userId, eventId });
   return res.status(201).json(newRegistration);
+});
+
+// remove a users' event registration
+router.delete('/unregister', async (req, res) => {
+  const { userId, eventId } = req.body;
+  const { eventRegistration } = req.app.locals;
+
+  const registration = await eventRegistration.findOne({ where: { userId, eventId } });
+
+  if (!registration) {
+    return res.status(404).json({ error: 'Registration not found' });
+  }
+
+  await registration.destroy();
+  return res.status(204).json({ message: 'You have deleted your registration.' })
 });
 
 module.exports = router;
